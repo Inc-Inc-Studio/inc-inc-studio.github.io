@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inc Inc Studio</title>
+<title>INC INC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Sora:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -107,8 +107,8 @@
     font-weight: 600;
     letter-spacing: 0.01em;
     margin-bottom: 6px;
-    color: var(--text);
-    text-shadow: 0 0 12px rgba(255, 210, 63, 0.5);
+    color: var(--yellow);
+    text-shadow: 0 0 12px rgba(255, 210, 63, 0.6);
   }
 
   .game-card .game-desc {
@@ -165,23 +165,22 @@
 <canvas id="bg"></canvas>
 
 <main>
-  <h1>Inc Inc Studio</h1>
-  <p class="tagline">solo-built games, no larger plan than that</p>
+  <h1>INC INC</h1>
+  <p class="tagline">I make games solo, no larger plan than that</p>
 
   <section class="about">
-    <p>One-person studio. Currently one game exists, built over 8 months, released in 2026. No roadmap beyond that yet — this page exists mostly so there's somewhere real to point people.</p>
+    <p>One-person studio. Released Synthularity in August 2026. No roadmap beyond that yet - this page exists mostly so there's somewhere real to point people.</p>
   </section>
 
   <div class="game-card">
     <div class="game-name">Synthularity</div>
-    <div class="game-desc">A unique mix of rhythm and incremental game, wrapped in bullet heaven chaos with short runs. Harvest resources, engineer your arsenal, tune your singularity through infinite geometric waves — and watch reality break around you.</div>
+    <div class="game-desc">A unique mix of rhythm and incremental game, wrapped in bullet heaven chaos with short runs. Harvest resources, engineer your arsenal, tune your singularity through infinite geometric waves and watch reality break around you.</div>
     <a class="steam-link" href="https://store.steampowered.com/app/4537910/Synthularity/" target="_blank" rel="noopener">View on Steam →</a>
   </div>
 
   <nav class="links">
     <a href="https://store.steampowered.com/app/4537910/Synthularity/" target="_blank" rel="noopener">Steam</a>
-    <a href="#" target="_blank" rel="noopener">itch.io</a>
-    <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/Bo5ke" target="_blank" rel="noopener">GitHub</a>
   </nav>
 </main>
 
@@ -203,9 +202,9 @@ resize();
 
 const COLORS = ['#ffffff', '#ff2d55', '#00d4ff', '#ffd23f', '#a855f7'];
 const SHAPES = ['circle', 'triangle', 'square', 'hex', 'star'];
-const SPAWN_INTERVAL = 900; // ms between spawns, matches slow ambient feel
-const FILL_ALPHA = 0.10;
-const STROKE_ALPHA = 0.35;
+const SPAWN_INTERVAL = 2600; // ms between spawns — noticeably sparser than before
+const FILL_ALPHA = 0.20;
+const STROKE_ALPHA = 0.30;
 const MIN_SCALE = 14;
 const MAX_SCALE = 38;
 const SPEED = 9; // px per second
