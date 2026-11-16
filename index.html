@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>INC INC</title>
+<title>Incremental Incorporated</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Sora:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -167,8 +167,8 @@
 <canvas id="bg"></canvas>
 
 <main>
-  <h1>INC INC</h1>
-  <p class="tagline">I make games solo</p>
+  <h1>Incremental Incorporated</h1>
+  <p class="tagline">indie game maker</p>
 
   <section class="about">
     <p>One-person studio. Released Synthularity in August 2026 - this page exists mostly so there's somewhere real to point people.</p>
@@ -187,16 +187,16 @@
   </div>
 
   <nav class="links">
-    <a href="https://store.steampowered.com/app/4537910/Synthularity/" target="_blank" rel="noopener">Steam</a>
+    <a href="https://store.steampowered.com/curator/46471450" target="_blank" rel="noopener">Steam</a>
     <a href="https://incrementalinc.itch.io/" target="_blank" rel="noopener">itch.io</a>
     <a href="https://github.com/Inc-Inc-Studio" target="_blank" rel="noopener">GitHub</a>
   </nav>
 </main>
 
 <script>
-// Ambient starfield with a slow pulsing core glow and occasional comet
-// streaks, evoking Tray Clicker's desktop black-hole overlay rather than
-// Synthularity's bullet-heaven shapes. Pure canvas 2D, no dependencies.
+// Mirrors MenuSpawner.cs: shapes drift in from one screen edge to the
+// opposite side, low alpha, random scale, random color from the game's
+// 5-color palette. Pure canvas 2D, no dependencies.
 
 const canvas = document.getElementById('bg');
 const ctx = canvas.getContext('2d');
@@ -205,87 +205,123 @@ let width, height;
 function resize() {
   width = canvas.width = window.innerWidth;
   height = canvas.height = window.innerHeight;
-  stars.forEach(s => { s.x = Math.random() * width; s.y = Math.random() * height; });
 }
-
-const STAR_COUNT = 140;
-const stars = Array.from({ length: STAR_COUNT }, () => ({
-  x: 0,
-  y: 0,
-  r: 0.5 + Math.random() * 1.3,
-  baseAlpha: 0.25 + Math.random() * 0.5,
-  phase: Math.random() * Math.PI * 2,
-  speed: 0.4 + Math.random() * 0.8
-}));
-
 window.addEventListener('resize', resize);
 resize();
 
-const CORE_X_FRAC = 0.78;
-const CORE_Y_FRAC = 0.26;
-const CORE_RADIUS = 260;
+const COLORS = ['#ffffff', '#ff2d55', '#00d4ff', '#ffd23f', '#a855f7'];
+const SHAPES = ['circle', 'triangle', 'square', 'hex', 'star'];
+const SPAWN_INTERVAL = 2600; // ms between spawns — noticeably sparser than before
+const FILL_ALPHA = 0.20;
+const STROKE_ALPHA = 0.30;
+const MIN_SCALE = 14;
+const MAX_SCALE = 38;
+const SPEED = 9; // px per second
 
-let comets = [];
-let lastComet = 0;
-const COMET_INTERVAL = 6000; // ms between comet spawns
+let shapes = [];
+let lastSpawn = 0;
 
-function spawnComet() {
-  const fromLeft = Math.random() < 0.5;
-  const y = Math.random() * height * 0.6;
-  const speed = 2.6 + Math.random() * 1.4;
-  comets.push({
-    x: fromLeft ? -40 : width + 40,
-    y,
-    vx: fromLeft ? speed : -speed,
-    vy: speed * 0.35
-  });
+function randomEdgeSpawn() {
+  const offset = 60;
+  const side = Math.floor(Math.random() * 4);
+  let start, target;
+
+  if (side === 0) { // top -> bottom
+    start = { x: Math.random() * width, y: -offset };
+    target = { x: Math.random() * width, y: height + offset };
+  } else if (side === 1) { // right -> left
+    start = { x: width + offset, y: Math.random() * height };
+    target = { x: -offset, y: Math.random() * height };
+  } else if (side === 2) { // bottom -> top
+    start = { x: Math.random() * width, y: height + offset };
+    target = { x: Math.random() * width, y: -offset };
+  } else { // left -> right
+    start = { x: -offset, y: Math.random() * height };
+    target = { x: width + offset, y: Math.random() * height };
+  }
+
+  const dx = target.x - start.x;
+  const dy = target.y - start.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  return {
+    x: start.x,
+    y: start.y,
+    vx: (dx / dist) * SPEED,
+    vy: (dy / dist) * SPEED,
+    size: MIN_SCALE + Math.random() * (MAX_SCALE - MIN_SCALE),
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+    rotation: Math.random() * Math.PI * 2,
+    rotSpeed: (Math.random() - 0.5) * 2.2
+  };
+}
+
+function drawShape(s) {
+  ctx.save();
+  ctx.translate(s.x, s.y);
+  ctx.rotate(s.rotation);
+  ctx.shadowColor = s.color;
+  ctx.shadowBlur = 10;
+
+  const r = s.size / 2;
+  ctx.beginPath();
+
+  if (s.shape === 'circle') {
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+  } else if (s.shape === 'square') {
+    ctx.rect(-r, -r, s.size, s.size);
+  } else if (s.shape === 'triangle') {
+    for (let i = 0; i < 3; i++) {
+      const a = (Math.PI * 2 / 3) * i - Math.PI / 2;
+      const px = Math.cos(a) * r, py = Math.sin(a) * r;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  } else if (s.shape === 'hex') {
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI * 2 / 6) * i;
+      const px = Math.cos(a) * r, py = Math.sin(a) * r;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  } else if (s.shape === 'star') {
+    for (let i = 0; i < 10; i++) {
+      const a = (Math.PI / 5) * i;
+      const rad = i % 2 === 0 ? r : r * 0.45;
+      const px = Math.cos(a) * rad, py = Math.sin(a) * rad;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+
+  ctx.globalAlpha = FILL_ALPHA;
+  ctx.fillStyle = s.color;
+  ctx.fill();
+
+  ctx.globalAlpha = STROKE_ALPHA;
+  ctx.strokeStyle = s.color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.restore();
 }
 
 function tick(timestamp) {
   ctx.clearRect(0, 0, width, height);
 
-  const cx = width * CORE_X_FRAC;
-  const cy = height * CORE_Y_FRAC;
-  const pulse = 0.55 + Math.sin(timestamp / 1800) * 0.12;
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, CORE_RADIUS);
-  grad.addColorStop(0, `rgba(255, 190, 120, ${0.16 * pulse})`);
-  grad.addColorStop(0.5, `rgba(255, 140, 60, ${0.07 * pulse})`);
-  grad.addColorStop(1, 'rgba(255, 140, 60, 0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, width, height);
-
-  stars.forEach(s => {
-    const alpha = s.baseAlpha * (0.6 + 0.4 * Math.sin(timestamp / 1000 * s.speed + s.phase));
-    ctx.beginPath();
-    ctx.fillStyle = `rgba(255, 245, 230, ${alpha})`;
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  if (timestamp - lastComet > COMET_INTERVAL) {
-    spawnComet();
-    lastComet = timestamp;
+  if (timestamp - lastSpawn > SPAWN_INTERVAL) {
+    shapes.push(randomEdgeSpawn());
+    lastSpawn = timestamp;
   }
 
-  comets = comets.filter(c => {
-    c.x += c.vx;
-    c.y += c.vy;
-
-    const tailLen = 70;
-    const tx = c.x - c.vx * (tailLen / Math.max(Math.abs(c.vx), 0.1));
-    const ty = c.y - c.vy * (tailLen / Math.max(Math.abs(c.vx), 0.1));
-
-    const tailGrad = ctx.createLinearGradient(c.x, c.y, tx, ty);
-    tailGrad.addColorStop(0, 'rgba(255, 230, 190, 0.85)');
-    tailGrad.addColorStop(1, 'rgba(255, 230, 190, 0)');
-    ctx.strokeStyle = tailGrad;
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.moveTo(c.x, c.y);
-    ctx.lineTo(tx, ty);
-    ctx.stroke();
-
-    return c.x > -80 && c.x < width + 80 && c.y < height + 80;
+  const dt = 1 / 60;
+  shapes = shapes.filter(s => {
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+    s.rotation += s.rotSpeed * dt;
+    drawShape(s);
+    return s.x > -100 && s.x < width + 100 && s.y > -100 && s.y < height + 100;
   });
 
   requestAnimationFrame(tick);
